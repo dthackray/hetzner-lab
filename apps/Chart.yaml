@@ -1,0 +1,5 @@
+apiVersion: v2
+name: root-apps
+description: App of Apps parent chart for managing all applications
+type: application
+version: 1.0.0
