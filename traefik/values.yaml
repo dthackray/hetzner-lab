@@ -130,3 +130,16 @@ securityContext:
 
 podSecurityContext:
   fsGroup: 65532
+
+# Volume mounts for plugins (required when using readOnlyRootFilesystem)
+volumes:
+  - name: plugins
+    emptyDir: {}
+  - name: tmp
+    emptyDir: {}
+
+volumeMounts:
+  - name: plugins
+    mountPath: /plugins-storage
+  - name: tmp
+    mountPath: /tmp
