@@ -81,6 +81,8 @@ metrics:
 
 # Additional command line arguments
 additionalArguments:
+  # Set plugin storage to writable directory
+  - "--experimental.localPlugins.storage=/tmp/plugins-storage"
   # Enable experimental plugins
   - "--experimental.plugins.realplugin.modulename=github.com/Paxxs/traefik-get-real-ip"
   - "--experimental.plugins.realplugin.version=v1.0.3"
