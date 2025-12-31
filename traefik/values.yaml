@@ -1,0 +1,133 @@
+# Traefik Configuration for hetzner-lab cluster
+
+# Deployment configuration
+deployment:
+  replicas: 1
+  podAnnotations:
+    prometheus.io/port: "8082"
+    prometheus.io/scrape: "true"
+
+# Service configuration - Using NodePort to match existing k3s setup
+service:
+  type: NodePort
+  annotations: {}
+  spec:
+    externalTrafficPolicy: Local
+
+# Ports configuration
+ports:
+  # HTTP
+  web:
+    port: 8000
+    exposedPort: 80
+    nodePort: 31212  # Match existing k3s NodePort
+    protocol: TCP
+  # HTTPS
+  websecure:
+    port: 8443
+    exposedPort: 443
+    nodePort: 32533  # Match existing k3s NodePort
+    protocol: TCP
+    # TLS will be configured later with cert-manager
+    tls:
+      enabled: true
+  # Metrics
+  metrics:
+    port: 8082
+    expose: true
+    exposedPort: 8082
+    protocol: TCP
+  # Dashboard/API
+  traefik:
+    port: 9000
+    exposedPort: 9000
+    nodePort: 32090
+    protocol: TCP
+
+# Dashboard configuration
+ingressRoute:
+  dashboard:
+    enabled: true
+    # Accessible via http://<node-ip>:32090/dashboard/
+    # We'll secure this with an Ingress + basic auth later
+    entryPoints: ["traefik"]
+
+# Enable dashboard via API
+api:
+  dashboard: true
+  insecure: true  # Remove this once we add proper ingress with auth
+
+# Logs configuration
+logs:
+  general:
+    level: INFO
+  access:
+    enabled: true
+    format: json
+
+# Metrics for Prometheus
+metrics:
+  prometheus:
+    enabled: true
+    entryPoint: metrics
+    addEntryPointsLabels: true
+    addRoutersLabels: true
+    addServicesLabels: true
+
+# Global redirect configuration (HTTP to HTTPS)
+# Disabled for now - we'll enable after cert-manager is setup
+# globalArguments:
+#   - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+#   - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+
+# Additional command line arguments
+additionalArguments:
+  # Enable experimental plugins
+  - "--experimental.plugins.realplugin.modulename=github.com/Paxxs/traefik-get-real-ip"
+  - "--experimental.plugins.realplugin.version=v1.0.3"
+  - "--experimental.plugins.fail2ban.modulename=github.com/tomMoulard/fail2ban"
+  - "--experimental.plugins.fail2ban.version=v0.7.2"
+  - "--experimental.plugins.geoblock.modulename=github.com/PascalMinder/geoblock"
+  - "--experimental.plugins.geoblock.version=v0.2.7"
+  - "--experimental.plugins.rewritebody.modulename=github.com/traefik/plugin-rewritebody"
+  - "--experimental.plugins.rewritebody.version=v0.3.1"
+
+# Providers configuration
+providers:
+  kubernetesCRD:
+    enabled: true
+    allowCrossNamespace: true
+    allowExternalNameServices: true
+  kubernetesIngress:
+    enabled: true
+    allowExternalNameServices: true
+    publishedService:
+      enabled: true
+
+# Pilot (Traefik Hub) - disabled
+pilot:
+  enabled: false
+
+# Priority class for pod scheduling
+priorityClassName: "system-cluster-critical"
+
+# Tolerations to run on control plane nodes
+tolerations:
+  - key: "CriticalAddonsOnly"
+    operator: "Exists"
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+# Security context
+securityContext:
+  capabilities:
+    drop: [ALL]
+    add: [NET_BIND_SERVICE]
+  readOnlyRootFilesystem: true
+  runAsGroup: 65532
+  runAsNonRoot: true
+  runAsUser: 65532
+
+podSecurityContext:
+  fsGroup: 65532

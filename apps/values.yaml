@@ -9,3 +9,7 @@ argocd:
 cilium:
   enabled: true
   chartVersion: "1.18.5"
+
+traefik:
+  enabled: true
+  chartVersion: "38.0.0"
