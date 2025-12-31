@@ -1,0 +1,44 @@
+# Sealed Secrets Configuration for hetzner-lab cluster
+
+# Controller configuration
+fullnameOverride: sealed-secrets-controller
+
+# Resource limits
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+# Security context
+podSecurityContext:
+  fsGroup: 65534
+  runAsNonRoot: true
+  runAsUser: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1001
+
+# Metrics for Prometheus (will enable once kube-prometheus-stack is installed)
+metrics:
+  serviceMonitor:
+    enabled: false
+    namespace: kube-system
+
+# Command line flags
+commandArgs:
+  # Update sealed secrets when SealedSecret is updated
+  - --update-status
+
+# Log level
+logLevel: info
