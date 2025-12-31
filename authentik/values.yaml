@@ -1,0 +1,135 @@
+# Authentik Configuration for hetzner-lab cluster
+
+# Global Authentik configuration
+authentik:
+  # Secret key for Authentik - will be provided via sealed secret
+  secret_key: ""
+
+  # Error reporting (disabled for privacy)
+  error_reporting:
+    enabled: false
+
+  # PostgreSQL connection (using bundled subchart)
+  postgresql:
+    host: "authentik-postgresql"
+    name: "authentik"
+    user: "authentik"
+    password: ""  # Will be provided via secret
+
+  # Redis connection (using bundled subchart)
+  redis:
+    host: "authentik-redis-master"
+
+# Server configuration
+server:
+  # Number of replicas
+  replicas: 1
+
+  # Ingress configuration
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - auth.dthackray.com
+    tls:
+      - secretName: authentik-tls
+        hosts:
+          - auth.dthackray.com
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Worker configuration
+worker:
+  replicas: 1
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+# PostgreSQL subchart configuration
+postgresql:
+  enabled: true
+  auth:
+    username: authentik
+    database: authentik
+    existingSecret: authentik-postgresql
+    secretKeys:
+      adminPasswordKey: postgres-password
+      userPasswordKey: password
+
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi
+
+# Redis subchart configuration
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+
+  master:
+    persistence:
+      enabled: true
+      size: 2Gi
+
+    resources:
+      requests:
+        cpu: 20m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+# Service account
+serviceAccount:
+  create: true
+
+# Security contexts
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Prometheus metrics (will enable once kube-prometheus-stack is installed)
+prometheus:
+  serviceMonitor:
+    enabled: false
+
+# Environment variables from secret
+envFrom:
+  - secretRef:
+      name: authentik-secret-env

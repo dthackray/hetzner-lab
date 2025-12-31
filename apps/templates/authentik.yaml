@@ -1,0 +1,30 @@
+{{- if .Values.authentik.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.goauthentik.io
+      chart: authentik
+      targetRevision: {{ .Values.authentik.chartVersion }}
+      helm:
+        valueFiles:
+          - $values/authentik/values.yaml
+    - repoURL: https://github.com/dthackray/hetzner-lab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: authentik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+{{- end }}
