@@ -1,10 +1,21 @@
 # Authentik Configuration for hetzner-lab cluster
 
 # Global Authentik configuration
-authentik:
-  # Secret key for Authentik - will be provided via sealed secret
-  secret_key: ""
+global:
+  # Environment variables for Authentik pods
+  env:
+    - name: AUTHENTIK_SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secret-env
+          key: AUTHENTIK_SECRET_KEY
+    - name: AUTHENTIK_POSTGRESQL__PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secret-env
+          key: AUTHENTIK_POSTGRESQL__PASSWORD
 
+authentik:
   # Error reporting (disabled for privacy)
   error_reporting:
     enabled: false
@@ -14,7 +25,6 @@ authentik:
     host: "authentik-postgresql"
     name: "authentik"
     user: "authentik"
-    password: ""  # Will be provided via secret
 
   # Redis connection (using bundled subchart)
   redis:
@@ -128,8 +138,3 @@ containerSecurityContext:
 prometheus:
   serviceMonitor:
     enabled: false
-
-# Environment variables from secret
-envFrom:
-  - secretRef:
-      name: authentik-secret-env
