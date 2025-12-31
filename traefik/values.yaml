@@ -34,7 +34,6 @@ ports:
   # Metrics
   metrics:
     port: 8082
-    expose: true
     exposedPort: 8082
     protocol: TCP
   # Dashboard/API
