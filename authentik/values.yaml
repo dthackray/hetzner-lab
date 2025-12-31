@@ -98,6 +98,17 @@ worker:
     serviceMonitor:
       enabled: false
 
+  # Startup probe configuration - allow 2 minutes for migrations
+  startupProbe:
+    exec:
+      command:
+        - ak
+        - healthcheck
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+
   # Volume mounts for writable directories
   volumeMounts:
     - name: tmp
