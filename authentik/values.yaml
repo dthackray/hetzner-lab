@@ -57,6 +57,12 @@ server:
       cpu: 500m
       memory: 512Mi
 
+  # Metrics configuration (will enable once kube-prometheus-stack is installed)
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: false
+
 # Worker configuration
 worker:
   replicas: 1
@@ -68,6 +74,12 @@ worker:
     limits:
       cpu: 300m
       memory: 256Mi
+
+  # Metrics configuration (will enable once kube-prometheus-stack is installed)
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: false
 
 # PostgreSQL subchart configuration
 postgresql:
@@ -112,8 +124,3 @@ redis:
       limits:
         cpu: 100m
         memory: 128Mi
-
-# Prometheus metrics (will enable once kube-prometheus-stack is installed)
-prometheus:
-  serviceMonitor:
-    create: false
