@@ -1,0 +1,31 @@
+{{- if .Values.certManager.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.jetstack.io
+      chart: cert-manager
+      targetRevision: {{ .Values.certManager.chartVersion }}
+      helm:
+        valueFiles:
+          - $values/cert-manager/values.yaml
+    - repoURL: https://github.com/dthackray/hetzner-lab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}

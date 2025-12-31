@@ -1,0 +1,53 @@
+# cert-manager Configuration for hetzner-lab cluster
+
+# Install CRDs as part of the Helm chart
+installCRDs: true
+
+# Global configuration
+global:
+  leaderElection:
+    namespace: cert-manager
+
+# Prometheus metrics
+prometheus:
+  enabled: true
+  servicemonitor:
+    enabled: true
+    prometheusInstance: default
+
+# Webhook configuration (required for validation)
+webhook:
+  replicaCount: 1
+
+# CA injector configuration
+cainjector:
+  replicaCount: 1
+
+# Controller configuration
+replicaCount: 1
+
+# Resource limits
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+# Enable verbose logging for troubleshooting (can disable later)
+# logLevel: 2
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true

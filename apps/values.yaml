@@ -13,3 +13,7 @@ cilium:
 traefik:
   enabled: true
   chartVersion: "38.0.0"
+
+certManager:
+  enabled: true
+  chartVersion: "v1.19.2"
