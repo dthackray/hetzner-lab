@@ -1,0 +1,23 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    # Let's Encrypt production server
+    # IMPORTANT: Has strict rate limits (50 certificates per registered domain per week)
+    # Only use after testing with staging issuer
+    server: https://acme-v02.api.letsencrypt.org/directory
+
+    # Email address for ACME registration and renewal notifications
+    email: djthackray@gmail.com
+
+    # Secret to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-prod
+
+    # HTTP-01 challenge solver using Traefik ingress
+    solvers:
+    - http01:
+        ingress:
+          class: traefik
