@@ -1,0 +1,31 @@
+{{- if .Values.cilium.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://helm.cilium.io
+      chart: cilium
+      targetRevision: {{ .Values.cilium.chartVersion }}
+      helm:
+        valueFiles:
+          - $values/cilium/values.yaml
+    - repoURL: https://github.com/dthackray/hetzner-lab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+{{- end }}

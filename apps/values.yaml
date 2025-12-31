@@ -5,3 +5,7 @@ spec:
 argocd:
   enabled: true
   chartVersion: "7.7.3"
+
+cilium:
+  enabled: true
+  chartVersion: "1.18.5"
