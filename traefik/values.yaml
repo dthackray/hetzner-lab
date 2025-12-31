@@ -7,10 +7,12 @@ deployment:
     prometheus.io/port: "8082"
     prometheus.io/scrape: "true"
 
-# Service configuration - Using NodePort to match existing k3s setup
+# Service configuration - Using LoadBalancer with Hetzner CCM
 service:
-  type: NodePort
-  annotations: {}
+  type: LoadBalancer
+  annotations:
+    load-balancer.hetzner.cloud/name: hetzner-cluster-1-ingress
+    load-balancer.hetzner.cloud/location: nbg1
   spec:
     externalTrafficPolicy: Local
 
@@ -20,15 +22,12 @@ ports:
   web:
     port: 8000
     exposedPort: 80
-    nodePort: 31212  # Match existing k3s NodePort
     protocol: TCP
   # HTTPS
   websecure:
     port: 8443
     exposedPort: 443
-    nodePort: 32533  # Match existing k3s NodePort
     protocol: TCP
-    # TLS will be configured later with cert-manager
     tls:
       enabled: true
   # Metrics
@@ -40,7 +39,6 @@ ports:
   traefik:
     port: 9000
     exposedPort: 9000
-    nodePort: 32090
     protocol: TCP
 
 # Dashboard configuration
