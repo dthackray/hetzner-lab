@@ -119,24 +119,15 @@ tolerations:
     effect: "NoSchedule"
 
 # Security context
+# Note: readOnlyRootFilesystem disabled to allow plugin loading
 securityContext:
   capabilities:
     drop: [ALL]
     add: [NET_BIND_SERVICE]
-  readOnlyRootFilesystem: true
+  readOnlyRootFilesystem: false
   runAsGroup: 65532
   runAsNonRoot: true
   runAsUser: 65532
 
 podSecurityContext:
   fsGroup: 65532
-
-# Volume mounts for plugins (required when using readOnlyRootFilesystem)
-volumes:
-  - name: plugins
-    mountPath: /plugins-storage
-    type: emptyDir
-
-additionalVolumeMounts:
-  - name: plugins
-    mountPath: /plugins-storage
