@@ -25,3 +25,7 @@ sealedSecrets:
 externalDns:
   enabled: true
   chartVersion: "1.15.0"
+
+authentik:
+  enabled: true
+  chartVersion: "2024.12.1"
