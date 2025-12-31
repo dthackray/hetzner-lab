@@ -63,6 +63,23 @@ server:
     serviceMonitor:
       enabled: false
 
+  # Volume mounts for writable directories
+  volumeMounts:
+    - name: tmp
+      mountPath: /tmp
+    - name: media
+      mountPath: /media
+    - name: certs
+      mountPath: /certs
+
+  volumes:
+    - name: tmp
+      emptyDir: {}
+    - name: media
+      emptyDir: {}
+    - name: certs
+      emptyDir: {}
+
 # Worker configuration
 worker:
   replicas: 1
@@ -80,6 +97,20 @@ worker:
     enabled: true
     serviceMonitor:
       enabled: false
+
+  # Volume mounts for writable directories
+  volumeMounts:
+    - name: tmp
+      mountPath: /tmp
+    - name: shm
+      mountPath: /dev/shm
+
+  volumes:
+    - name: tmp
+      emptyDir: {}
+    - name: shm
+      emptyDir:
+        medium: Memory
 
 # PostgreSQL subchart configuration
 postgresql:
