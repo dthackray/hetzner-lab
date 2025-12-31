@@ -12,7 +12,8 @@ global:
 prometheus:
   enabled: true
   servicemonitor:
-    enabled: true
+    # Will enable once kube-prometheus-stack is installed
+    enabled: false
     prometheusInstance: default
 
 # Webhook configuration (required for validation)
