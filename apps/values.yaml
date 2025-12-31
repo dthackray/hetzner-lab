@@ -21,3 +21,7 @@ certManager:
 sealedSecrets:
   enabled: true
   chartVersion: "2.17.2"
+
+externalDns:
+  enabled: true
+  chartVersion: "1.15.0"

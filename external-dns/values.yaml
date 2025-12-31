@@ -1,0 +1,69 @@
+# External DNS Configuration for hetzner-lab cluster
+
+# Provider configuration - Cloudflare
+provider:
+  name: cloudflare
+
+# Cloudflare configuration
+env:
+  - name: CF_API_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: cloudflare-api-token
+        key: api-token
+
+# Domain filter - only manage DNS for this domain
+domainFilters:
+  - dthackray.com
+
+# Source configuration - watch Ingress and Service resources
+sources:
+  - ingress
+  - service
+
+# Policy - upsert-only is safer, won't delete manually created records
+policy: upsert-only
+
+# TXT registry for ownership tracking
+registry: txt
+txtOwnerId: hetzner-lab-k3s
+txtPrefix: externaldns-
+
+# Log configuration
+logLevel: info
+logFormat: text
+
+# Sync interval
+interval: 1m
+
+# Trigger loop on resource changes
+triggerLoopOnEvent: true
+
+# Resource limits
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 50m
+    memory: 64Mi
+
+# Security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  fsGroup: 65534
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+
+# ServiceMonitor for Prometheus (will enable once kube-prometheus-stack is installed)
+serviceMonitor:
+  enabled: false
