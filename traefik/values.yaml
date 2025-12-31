@@ -132,12 +132,15 @@ securityContext:
 podSecurityContext:
   fsGroup: 65532
 
-# Volume for plugin storage (Traefik hardcodes /plugins-storage)
-volumes:
-  - name: plugins-storage
-    mountPath: /plugins-storage
-    type: emptyDir
+# Deployment-level configuration
+deployment:
+  # Volume for plugin storage (Traefik hardcodes /plugins-storage)
+  additionalVolumes:
+    - name: plugins-storage
+      emptyDir: {}
 
+# Mount plugin storage as writable
 additionalVolumeMounts:
   - name: plugins-storage
     mountPath: /plugins-storage
+    readOnly: false
