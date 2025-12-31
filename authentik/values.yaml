@@ -113,28 +113,7 @@ redis:
         cpu: 100m
         memory: 128Mi
 
-# Service account
-serviceAccount:
-  create: true
-
-# Security contexts
-securityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  fsGroup: 1000
-  seccompProfile:
-    type: RuntimeDefault
-
-containerSecurityContext:
-  allowPrivilegeEscalation: false
-  capabilities:
-    drop:
-      - ALL
-  readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  runAsUser: 1000
-
 # Prometheus metrics (will enable once kube-prometheus-stack is installed)
 prometheus:
   serviceMonitor:
-    enabled: false
+    create: false

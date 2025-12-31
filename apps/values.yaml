@@ -28,4 +28,4 @@ externalDns:
 
 authentik:
   enabled: true
-  chartVersion: "2024.12.1"
+  chartVersion: "2025.10.3"
