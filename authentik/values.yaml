@@ -48,14 +48,14 @@ server:
         hosts:
           - auth.dthackray.com
 
-  # Resource limits
+  # Resource limits (based on Docker Compose recommendations)
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
     limits:
       cpu: 500m
-      memory: 512Mi
+      memory: 1Gi
 
   # Metrics configuration (will enable once kube-prometheus-stack is installed)
   metrics:
@@ -86,11 +86,11 @@ worker:
 
   resources:
     requests:
-      cpu: 50m
-      memory: 128Mi
+      cpu: 100m
+      memory: 512Mi
     limits:
-      cpu: 300m
-      memory: 256Mi
+      cpu: 500m
+      memory: 1Gi
 
   # Metrics configuration (will enable once kube-prometheus-stack is installed)
   metrics:
