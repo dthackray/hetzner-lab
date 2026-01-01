@@ -86,16 +86,8 @@ grafana:
     enabled: true
     size: 10Gi
 
-  # Pre-configured data sources
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      datasources:
-        - name: Prometheus
-          type: prometheus
-          url: http://kube-prometheus-stack-prometheus:9090
-          access: proxy
-          isDefault: true
+  # Datasources are automatically configured by the chart
+  # Prometheus datasource is created by default
 
   # Resource limits
   resources:
