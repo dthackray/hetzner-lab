@@ -2,7 +2,7 @@
 
 # Kube-proxy replacement (hetzner-k3s sets k8sServiceHost/Port automatically)
 kubeProxyReplacement: true
-k8sServiceHost: "10.0.0.6"
+k8sServiceHost: "10.0.0.4"
 k8sServicePort: 6443
 
 # IPAM
