@@ -2,12 +2,27 @@
 ## Reference: https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd
 
 global:
-  domain: argocd.example.com
+  domain: argocd.dthackray.com
 
 server:
   extraArgs:
-    - --insecure  # Remove this when you configure TLS
+    - --insecure  # TLS termination happens at Traefik
+
+  # Ingress configuration
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      # Enable Authentik ForwardAuth middleware
+      traefik.ingress.kubernetes.io/router.middlewares: default-authentik@kubernetescrd
+    hostname: argocd.dthackray.com
+    tls: true
+    extraTls:
+      - hosts:
+          - argocd.dthackray.com
+        secretName: argocd-tls
 
 configs:
   params:
-    server.insecure: true  # Remove this when you configure TLS
+    server.insecure: true  # TLS termination happens at Traefik
