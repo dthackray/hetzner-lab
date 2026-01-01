@@ -26,3 +26,10 @@ server:
 configs:
   params:
     server.insecure: true  # TLS termination happens at Traefik
+
+  # Disable ArgoCD authentication - using Authentik instead
+  # All users who reach ArgoCD through Authentik get admin access
+  rbac:
+    policy.default: role:admin
+    policy.csv: |
+      g, system:anonymous, role:admin
