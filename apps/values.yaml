@@ -29,3 +29,6 @@ externalDns:
 authentik:
   enabled: true
   chartVersion: "2025.10.3"
+
+whoami:
+  enabled: true
