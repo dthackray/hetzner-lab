@@ -44,15 +44,12 @@ ports:
 # Dashboard configuration
 ingressRoute:
   dashboard:
-    enabled: true
-    # Accessible via http://<node-ip>:32090/dashboard/
-    # We'll secure this with an Ingress + basic auth later
-    entryPoints: ["traefik"]
+    enabled: false  # Disabled - using custom IngressRoute with Authentik in extraObjects
 
 # Enable dashboard via API
 api:
   dashboard: true
-  insecure: true  # Remove this once we add proper ingress with auth
+  insecure: false  # Secured via Authentik ForwardAuth
 
 # Logs configuration
 logs:
