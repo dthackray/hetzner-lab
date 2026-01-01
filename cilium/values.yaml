@@ -46,3 +46,15 @@ hubble:
   ui:
     enabled: true
     replicas: 2
+    ingress:
+      enabled: true
+      className: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        traefik.ingress.kubernetes.io/router.middlewares: default-authentik@kubernetescrd
+      hosts:
+        - hubble.dthackray.com
+      tls:
+        - secretName: hubble-ui-tls
+          hosts:
+            - hubble.dthackray.com
