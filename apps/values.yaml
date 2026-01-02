@@ -35,4 +35,4 @@ whoami:
 
 kubePrometheusStack:
   enabled: true
-  chartVersion: "68.2.2"
+  chartVersion: "80.9.2"
