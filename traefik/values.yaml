@@ -1,8 +1,8 @@
 # Traefik Configuration for hetzner-lab cluster
 
-# Deployment configuration
+# Deployment configuration - DaemonSet to run on all nodes for HA
 deployment:
-  replicas: 1
+  kind: DaemonSet
   podAnnotations:
     prometheus.io/port: "8082"
     prometheus.io/scrape: "true"
@@ -125,12 +125,10 @@ securityContext:
 podSecurityContext:
   fsGroup: 65532
 
-# Deployment-level configuration
-deployment:
-  # Volume for plugin storage (Traefik hardcodes /plugins-storage)
-  additionalVolumes:
-    - name: plugins-storage
-      emptyDir: {}
+# Volume for plugin storage (Traefik hardcodes /plugins-storage)
+additionalVolumes:
+  - name: plugins-storage
+    emptyDir: {}
 
 # Mount plugin storage as writable
 additionalVolumeMounts:
