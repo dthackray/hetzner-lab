@@ -6,6 +6,10 @@ deployment:
   podAnnotations:
     prometheus.io/port: "8082"
     prometheus.io/scrape: "true"
+  # Volume for plugin storage (Traefik hardcodes /plugins-storage)
+  additionalVolumes:
+    - name: plugins-storage
+      emptyDir: {}
 
 # Service configuration - Using LoadBalancer with Hetzner CCM
 service:
@@ -124,11 +128,6 @@ securityContext:
 
 podSecurityContext:
   fsGroup: 65532
-
-# Volume for plugin storage (Traefik hardcodes /plugins-storage)
-additionalVolumes:
-  - name: plugins-storage
-    emptyDir: {}
 
 # Mount plugin storage as writable
 additionalVolumeMounts:
