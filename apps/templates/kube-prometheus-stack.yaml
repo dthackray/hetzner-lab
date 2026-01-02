@@ -9,6 +9,16 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
+  # Ignore status fields not in CRD schema (ArgoCD compatibility)
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      jqPathExpressions:
+        - .status
+    - group: apps
+      kind: DaemonSet
+      jqPathExpressions:
+        - .status
   sources:
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: kube-prometheus-stack
