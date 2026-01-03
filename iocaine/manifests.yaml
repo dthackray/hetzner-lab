@@ -35,15 +35,14 @@ spec:
             limits:
               memory: "64Mi"
               cpu: "100m"
+          # TCP probes - iocaine returns 421 without proper Host header
           livenessProbe:
-            httpGet:
-              path: /
+            tcpSocket:
               port: 42069
             initialDelaySeconds: 5
             periodSeconds: 30
           readinessProbe:
-            httpGet:
-              path: /
+            tcpSocket:
               port: 42069
             initialDelaySeconds: 5
             periodSeconds: 10
