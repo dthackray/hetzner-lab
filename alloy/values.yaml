@@ -1,0 +1,176 @@
+# Grafana Alloy Configuration for hetzner-lab cluster
+# OpenTelemetry collector for logs and traces
+
+# Controller settings
+alloy:
+  # Enable clustering for HA (optional for homelab)
+  clustering:
+    enabled: false
+
+  # Alloy configuration
+  configMap:
+    create: true
+    content: |
+      // Discover Kubernetes pods for log collection
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+
+      // Relabel discovered pods
+      discovery.relabel "pods" {
+        targets = discovery.kubernetes.pods.targets
+
+        // Keep only running pods
+        rule {
+          source_labels = ["__meta_kubernetes_pod_phase"]
+          regex         = "Pending|Succeeded|Failed|Completed"
+          action        = "drop"
+        }
+
+        // Set namespace label
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+
+        // Set pod name label
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+
+        // Set container name label
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+
+        // Set node name label
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          target_label  = "node"
+        }
+
+        // Set app label from pod labels
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app"]
+          target_label  = "app"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          target_label  = "app"
+        }
+      }
+
+      // Collect logs from pods
+      loki.source.kubernetes "pods" {
+        targets    = discovery.relabel.pods.output
+        forward_to = [loki.process.pods.receiver]
+      }
+
+      // Process logs - add labels and parse
+      loki.process "pods" {
+        stage.static_labels {
+          values = {
+            cluster = "hetzner-cluster-1",
+          }
+        }
+
+        // Try to detect JSON logs
+        stage.json {
+          expressions = {
+            level = "level",
+            msg   = "msg",
+          }
+          drop_malformed = true
+        }
+
+        // Normalize log levels
+        stage.label_allow {
+          values = ["level"]
+        }
+
+        forward_to = [loki.write.default.receiver]
+      }
+
+      // Write logs to Loki
+      loki.write "default" {
+        endpoint {
+          url = "http://loki-gateway.loki.svc.cluster.local/loki/api/v1/push"
+        }
+      }
+
+      // OpenTelemetry receiver for traces
+      otelcol.receiver.otlp "default" {
+        grpc {
+          endpoint = "0.0.0.0:4317"
+        }
+        http {
+          endpoint = "0.0.0.0:4318"
+        }
+        output {
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+
+      // Export traces to Tempo
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo.tempo.svc.cluster.local:4317"
+          tls {
+            insecure = true
+          }
+        }
+      }
+
+  # Extra ports for OTLP receivers (traces from instrumented apps)
+  extraPorts:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+
+# Deploy as DaemonSet for log collection
+controller:
+  type: daemonset
+
+  # Tolerations to run on all nodes
+  tolerations:
+    - operator: "Exists"
+
+# Resources
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# ServiceMonitor for Prometheus
+serviceMonitor:
+  enabled: true
+  additionalLabels:
+    release: kube-prometheus-stack
+
+# Ingress for Alloy UI (debugging/monitoring interface)
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: default-authentik@kubernetescrd
+  hosts:
+    - host: alloy.dthackray.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: alloy-tls
+      hosts:
+        - alloy.dthackray.com

@@ -1,0 +1,26 @@
+# OpenTelemetry Operator Configuration for hetzner-lab cluster
+# Enables auto-instrumentation of applications for distributed tracing
+
+manager:
+  # Resource limits for the operator
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+  # Enable ServiceMonitor for Prometheus
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: kube-prometheus-stack
+
+# Admission webhooks configuration
+admissionWebhooks:
+  certManager:
+    enabled: true
+    issuerRef:
+      kind: ClusterIssuer
+      name: letsencrypt-prod

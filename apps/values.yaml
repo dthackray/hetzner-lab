@@ -46,3 +46,20 @@ crowdsec:
 
 iocaine:
   enabled: true
+
+# LGTM Stack (Loki, Grafana, Tempo, Mimir) - Grafana already in kube-prometheus-stack
+loki:
+  enabled: true
+  chartVersion: "6.24.0"
+
+tempo:
+  enabled: true
+  chartVersion: "1.18.0"
+
+alloy:
+  enabled: true
+  chartVersion: "0.12.0"
+
+opentelemetryOperator:
+  enabled: true
+  chartVersion: "0.78.0"

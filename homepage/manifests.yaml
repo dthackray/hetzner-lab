@@ -75,7 +75,7 @@ data:
           columns: 4
       - Monitoring:
           style: row
-          columns: 3
+          columns: 4
 
   widgets.yaml: |
     - openmeteo:
@@ -133,6 +133,10 @@ data:
             icon: alertmanager.png
             href: https://alertmanager.dthackray.com
             description: Alert routing
+        - Alloy:
+            icon: grafana.png
+            href: https://alloy.dthackray.com
+            description: OpenTelemetry collector
 
   bookmarks.yaml: |
     - Developer:
