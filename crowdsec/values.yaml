@@ -8,8 +8,10 @@ container_runtime: containerd
 lapi:
   replicas: 1
 
-  # Environment variables
+  # Enable DEBUG logging
   env:
+    - name: DEBUG
+      value: "true"
     # Register with CrowdSec Central API for community blocklists
     - name: ENROLL_KEY
       value: ""  # Optional: Add your CrowdSec console key for central management
@@ -66,6 +68,8 @@ agent:
 
   # Environment variables
   env:
+    - name: DEBUG
+      value: "true"
     - name: PARSERS
       value: "crowdsecurity/traefik-logs crowdsecurity/http-logs"
     - name: COLLECTIONS
