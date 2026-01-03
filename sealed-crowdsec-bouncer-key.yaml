@@ -1,0 +1,13 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: crowdsec-bouncer-key
+  namespace: kube-system
+spec:
+  encryptedData:
+    api-key: AgB3q37DxVKq7N8AOaPxR/D/Kn4Wj9LdCxHVqZOtc0yoTEecq8hFtEeMs7sIcTL6f9h2T/yHnXu5qcqu4g3PQHXqSvnwaG3XzDJRnjfYrmmdWF3yjE8eiaG0XDcpiawFNdeDsB/G+/79WmzVbXkCFNJoECOoLp6HRs2qEfggQPV3hXPetTPfreUiCQYSAdTSdVC35RIL3w7Uj1oFrv1VrDQjEc/jBbHuVCu1xeHanIZhWhqp4x+NHEQATLMU0PEwrrui9YpWRjIPAiydLXRNqPfUBTrrrK+VetfzxMfSMsf1Z08whE8aYXRhC4ZC/Rjovevbet2ETbpdsvSQvGDA6lXHUMYXsZsgwjeYb4c4uwUcjJcqG6twXEHya7DZLVkPwtuOLK7adGDKEgoqwxIvQ8xqtQ+PFqOodwq6mu7apkCVU7CWOXjug4EmlAI9V8veDUoYRx00/enhLHHYU6FRUY6p2TXl8J5vfTg0Ajv++TaFj/QAXG1Te+yOCgJGIg23RlBvfJ3fZqWCvitWFENN1oiYUfC2cW57mw+PFbT3UXe4JsSCDzs4K6qnZM/t2AjCtaf6Jh6q0epAnnZ+76hD7fw7QW8TDJLpZ1dmVXGaAqJsxpJX4cssIDRqjmN56D02+ODL3sioxZP1TC3Ux6Xl32+MbxL5FQ1Ce1WzTNA0BzPcw6zLrvjStJl+RzvH4y77dz/w1heaiPENmhC5/8rA4XFv7J9TTPV3R0uDLyCjCNjkFuK6Dk3JGTZpuQcO
+  template:
+    metadata:
+      name: crowdsec-bouncer-key
+      namespace: kube-system
