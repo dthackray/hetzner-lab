@@ -2,6 +2,10 @@
 # Enables auto-instrumentation of applications for distributed tracing
 
 manager:
+  # Required: Collector image repository
+  collectorImage:
+    repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
+
   # Resource limits for the operator
   resources:
     requests:

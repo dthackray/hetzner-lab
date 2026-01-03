@@ -165,11 +165,11 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     traefik.ingress.kubernetes.io/router.middlewares: default-authentik@kubernetescrd
+  path: /
+  pathType: Prefix
+  faroPort: 12345
   hosts:
-    - host: alloy.dthackray.com
-      paths:
-        - path: /
-          pathType: Prefix
+    - alloy.dthackray.com
   tls:
     - secretName: alloy-tls
       hosts:

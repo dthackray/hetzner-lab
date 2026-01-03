@@ -50,16 +50,16 @@ iocaine:
 # LGTM Stack (Loki, Grafana, Tempo, Mimir) - Grafana already in kube-prometheus-stack
 loki:
   enabled: true
-  chartVersion: "6.24.0"
+  chartVersion: "6.49.0"
 
 tempo:
   enabled: true
-  chartVersion: "1.18.0"
+  chartVersion: "1.24.1"
 
 alloy:
   enabled: true
-  chartVersion: "0.12.0"
+  chartVersion: "1.5.1"
 
 opentelemetryOperator:
   enabled: true
-  chartVersion: "0.78.0"
+  chartVersion: "0.102.0"
