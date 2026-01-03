@@ -10,26 +10,10 @@ deployment:
   additionalVolumes:
     - name: plugins-storage
       emptyDir: {}
-    - name: plugins-local
-      emptyDir: {}
     - name: crowdsec-bouncer-key
       secret:
         secretName: crowdsec-bouncer-key
         optional: true # Allow Traefik to start before secret exists
-  # InitContainer to clone iocaine plugin (not available on Traefik plugin registry)
-  initContainers:
-    - name: clone-iocaine-plugin
-      image: alpine/git:latest
-      command:
-        - sh
-        - -c
-        - |
-          mkdir -p /plugins-local/src/git.mstar.dev/mstar
-          git clone https://git.mstar.dev/mstar/traefik-iocaine-middleware.git \
-            /plugins-local/src/git.mstar.dev/mstar/traefik-iocaine-middleware
-      volumeMounts:
-        - name: plugins-local
-          mountPath: /plugins-local
 
 # Service configuration - Using LoadBalancer with Hetzner CCM
 service:
@@ -47,6 +31,12 @@ ports:
     port: 8000
     exposedPort: 80
     protocol: TCP
+    # Redirect HTTP to HTTPS
+    redirectTo:
+      port: websecure
+    # Apply geoblock before redirect to reject blocked countries early
+    middlewares:
+      - default-geoblock@kubernetescrd
   # HTTPS
   websecure:
     port: 8443
@@ -54,6 +44,11 @@ ports:
     protocol: TCP
     tls:
       enabled: true
+    # Global security middlewares - applied to ALL HTTPS traffic
+    middlewares:
+      - default-geoblock@kubernetescrd
+      - default-crowdsec@kubernetescrd
+      - default-bot-wrangler@kubernetescrd
   # Metrics
   metrics:
     port: 8082
@@ -108,9 +103,9 @@ additionalArguments:
   - "--experimental.plugins.geoblock.modulename=github.com/PascalMinder/geoblock"
   - "--experimental.plugins.geoblock.version=v0.3.4"
   - "--experimental.plugins.crowdsec.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin"
-  - "--experimental.plugins.crowdsec.version=v1.3.5"
-  # Iocaine local plugin
-  - "--experimental.localPlugins.iocaine.moduleName=git.mstar.dev/mstar/traefik-iocaine-middleware"
+  - "--experimental.plugins.crowdsec.version=v1.4.6"
+  - "--experimental.plugins.botwrangler.modulename=github.com/holysoles/bot-wrangler-traefik-plugin"
+  - "--experimental.plugins.botwrangler.version=v0.2.2"
 
 # Providers configuration
 providers:
@@ -158,15 +153,26 @@ additionalVolumeMounts:
   - name: plugins-storage
     mountPath: /plugins-storage
     readOnly: false
-  - name: plugins-local
-    mountPath: /plugins-local
-    readOnly: true
   - name: crowdsec-bouncer-key
     mountPath: /etc/traefik/crowdsec
     readOnly: true
 
 # Extra Kubernetes objects to deploy with Traefik
 extraObjects:
+  # CrowdSec Bouncer API Key (SealedSecret)
+  - apiVersion: bitnami.com/v1alpha1
+    kind: SealedSecret
+    metadata:
+      name: crowdsec-bouncer-key
+      namespace: kube-system
+    spec:
+      encryptedData:
+        api-key: AgBtO2dkXMvfmOW2g0/dHNk9kIzMOd9WjzyS8lFY+71GnMN2tXI2mz6OA6ruKm8tNOSG0gWABylfPWbQFLNcBJAPXqCiUtj8I4gc1RISTMflhnisF/RyMct/nIdrlcURxqGjuJzEFUQS0sD9a7lQlBFWkjU2rXvwSnVJoY/dERps7CDtx7Ar0BwT7XKoUtzcO3GJR56iifHa3VtKNWG1/GWUWS2UP4l6U4CuV8sCUcYFDUR5VFczb9pQd9Fl+Iw/pHRzzx6laDcBdfvx4X349ynMcvczO00vq5xBGcEZXjrm3Gin7jYyUwx3spiRLo3PDElpxpfhA1kvFkWKWSGadjF2tnq0BvphoVc4xqUNYjcT11fgd6OBBNy5BxqcFZf5rYlMWwDy/ctCS6wyh94DWW7mHAL7mZ86ayhN66aSsBZBUQWq8H02WRPKSO/IPYnluuPudSUM0Xbydu3YGXDcmrnkUkaoz6wRKdzJDLWnpHtG7KTBdH0xGT5JR8TGs+CUTdK5+oW7RrgQhde4w5IJ/DZLdDFIrD4erLLChXvbyJT3cChA0DGDiGI385U92Uz/i1vZG7PH26CzeyOaNIAhb7hn5iIFWLQwJqRmWO26xMTVij9agqOcyWlKb1H7RUZpFItXbkm85rvincaYUtDZiMaDj39na4xcHnuFyWZvhk7rzyxkR1Wdq2L3qbpP7Gpy0GwpONeNHyIFvcr8qUFKEhj1PgJvy5y33MErqdq1BdDI5D3DdlwKbPA+xyjT
+      template:
+        metadata:
+          name: crowdsec-bouncer-key
+          namespace: kube-system
+
   # Authentik ForwardAuth Middleware
   - apiVersion: traefik.io/v1alpha1
     kind: Middleware
@@ -279,7 +285,7 @@ extraObjects:
             - AU # Australia
             - NZ # New Zealand
 
-  # CrowdSec Bouncer Middleware
+  # CrowdSec Bouncer Middleware (Streaming mode for better performance)
   - apiVersion: traefik.io/v1alpha1
     kind: Middleware
     metadata:
@@ -290,11 +296,13 @@ extraObjects:
         crowdsec:
           enabled: true
           logLevel: INFO
-          crowdsecMode: live
+          # Streaming mode: keeps only banned IPs in cache, syncs periodically
+          crowdsecMode: stream
           crowdsecLapiScheme: http
           crowdsecLapiHost: crowdsec-lapi.crowdsec.svc.cluster.local:8080
           # API key mounted from secret
           crowdsecLapiKeyFile: /etc/traefik/crowdsec/api-key
+          # Sync banned IPs every 60 seconds
           updateIntervalSeconds: 60
           # Allow local IPs to bypass
           clientTrustedIPs:
@@ -302,19 +310,21 @@ extraObjects:
             - 172.16.0.0/12
             - 192.168.0.0/16
 
-  # Iocaine AI Bot Poisoner Middleware
+  # Bot Wrangler - Detects AI bots and proxies them to Iocaine
   - apiVersion: traefik.io/v1alpha1
     kind: Middleware
     metadata:
-      name: iocaine
+      name: bot-wrangler
       namespace: default
     spec:
       plugin:
-        iocaine:
-          iocaineHttpUrl: http://iocaine.default.svc.cluster.local:42069
-          methods:
-            - GET
-            - HEAD
+        botwrangler:
+          # PROXY: Send AI bots to iocaine for poisoning
+          botAction: PROXY
+          botProxyUrl: http://iocaine.default.svc.cluster.local:42069
+          logLevel: INFO
+          # Refresh bot list every 24 hours
+          cacheUpdateInterval: 24h
 
   # Security Chain - Combines all security middlewares
   - apiVersion: traefik.io/v1alpha1
@@ -329,5 +339,46 @@ extraObjects:
             namespace: default
           - name: crowdsec
             namespace: default
-          - name: iocaine
+          - name: bot-wrangler
             namespace: default
+
+  # Redirect root domain to homepage
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: redirect-to-home
+      namespace: default
+    spec:
+      redirectRegex:
+        regex: "^https://dthackray\\.com/(.*)"
+        replacement: "https://home.dthackray.com/${1}"
+        permanent: true
+
+  # Root domain Ingress - redirects to home.dthackray.com
+  # Using standard Ingress so external-dns creates the DNS record
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: root-domain-redirect
+      namespace: default
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        traefik.ingress.kubernetes.io/router.middlewares: default-redirect-to-home@kubernetescrd
+    spec:
+      ingressClassName: traefik
+      rules:
+        - host: dthackray.com
+          http:
+            paths:
+              - path: /
+                pathType: Prefix
+                backend:
+                  service:
+                    # Dummy service - redirect happens before reaching backend
+                    name: homepage
+                    port:
+                      number: 3000
+      tls:
+        - hosts:
+            - dthackray.com
+          secretName: root-domain-tls
