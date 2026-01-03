@@ -27,6 +27,7 @@ spec:
       kind: StatefulSet
       jsonPointers:
         - /status
+        - /spec/volumeClaimTemplates/0/metadata/creationTimestamp
     - group: apps
       kind: DaemonSet
       jsonPointers:
@@ -35,6 +36,11 @@ spec:
       kind: Deployment
       jsonPointers:
         - /status
+    - group: ""
+      kind: PersistentVolumeClaim
+      jsonPointers:
+        - /metadata/creationTimestamp
+        - /metadata/resourceVersion
   syncPolicy:
     automated:
       prune: true
