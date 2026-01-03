@@ -86,8 +86,8 @@ alloy:
           drop_malformed = true
         }
 
-        // Normalize log levels
-        stage.label_allow {
+        // Keep only the level label from extracted values
+        stage.label_keep {
           values = ["level"]
         }
 

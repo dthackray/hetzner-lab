@@ -22,9 +22,9 @@ manager:
       release: kube-prometheus-stack
 
 # Admission webhooks configuration
+# Use auto-generated self-signed certs for internal webhook (not Let's Encrypt)
 admissionWebhooks:
   certManager:
+    enabled: false
+  autoGenerateCert:
     enabled: true
-    issuerRef:
-      kind: ClusterIssuer
-      name: letsencrypt-prod
