@@ -1,0 +1,25 @@
+{{- if .Values.homepage.enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homepage
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dthackray/hetzner-lab.git
+    targetRevision: main
+    path: homepage
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+{{- end }}

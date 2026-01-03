@@ -36,3 +36,6 @@ whoami:
 kubePrometheusStack:
   enabled: true
   chartVersion: "80.9.2"
+
+homepage:
+  enabled: true

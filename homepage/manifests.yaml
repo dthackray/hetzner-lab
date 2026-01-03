@@ -1,0 +1,251 @@
+---
+# Homepage Dashboard - A beautiful startpage with weather and service widgets
+# https://gethomepage.dev/
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: homepage
+  namespace: default
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: homepage-token
+  namespace: default
+  annotations:
+    kubernetes.io/service-account.name: homepage
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: homepage
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces", "pods", "nodes"]
+    verbs: ["get", "list"]
+  - apiGroups: ["extensions", "networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list"]
+  - apiGroups: ["traefik.io", "traefik.containo.us"]
+    resources: ["ingressroutes"]
+    verbs: ["get", "list"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["nodes", "pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: homepage
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: homepage
+subjects:
+  - kind: ServiceAccount
+    name: homepage
+    namespace: default
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-config
+  namespace: default
+data:
+  kubernetes.yaml: |
+    mode: cluster
+
+  settings.yaml: |
+    title: Home Dashboard
+    background:
+      image: https://images.unsplash.com/photo-1502239608882-93b729c6af43?w=1920
+      blur: sm
+      opacity: 50
+    cardBlur: md
+    theme: dark
+    color: slate
+    headerStyle: clean
+    layout:
+      - Weather:
+          style: row
+          columns: 2
+      - Infrastructure:
+          style: row
+          columns: 4
+      - Monitoring:
+          style: row
+          columns: 3
+
+  widgets.yaml: |
+    - openmeteo:
+        units: metric
+        cache: 15
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: "Hetzner Cluster"
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+    - datetime:
+        text_size: xl
+        format:
+          dateStyle: long
+          timeStyle: short
+
+  services.yaml: |
+    - Infrastructure:
+        - ArgoCD:
+            icon: argocd.png
+            href: https://argocd.dthackray.com
+            description: GitOps deployments
+            namespace: argocd
+            app: argocd-server
+        - Traefik:
+            icon: traefik.png
+            href: https://traefik.dthackray.com
+            description: Ingress controller
+        - Authentik:
+            icon: authentik.png
+            href: https://auth.dthackray.com
+            description: Identity provider
+        - Whoami:
+            icon: mdi-account-question
+            href: https://whoami.dthackray.com
+            description: Test service
+
+    - Monitoring:
+        - Grafana:
+            icon: grafana.png
+            href: https://grafana.dthackray.com
+            description: Dashboards & visualization
+        - Prometheus:
+            icon: prometheus.png
+            href: https://prometheus.dthackray.com
+            description: Metrics collection
+        - Alertmanager:
+            icon: alertmanager.png
+            href: https://alertmanager.dthackray.com
+            description: Alert routing
+
+  bookmarks.yaml: |
+    - Developer:
+        - GitHub:
+            - icon: github.png
+              href: https://github.com/dthackray/hetzner-lab
+        - Hetzner Cloud:
+            - icon: hetzner.png
+              href: https://console.hetzner.cloud
+
+  docker.yaml: ""
+  custom.css: ""
+  custom.js: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homepage
+  template:
+    metadata:
+      labels:
+        app: homepage
+    spec:
+      serviceAccountName: homepage
+      containers:
+        - name: homepage
+          image: ghcr.io/gethomepage/homepage:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: HOMEPAGE_ALLOWED_HOSTS
+              value: "home.dthackray.com"
+          volumeMounts:
+            - name: config
+              mountPath: /app/config/kubernetes.yaml
+              subPath: kubernetes.yaml
+            - name: config
+              mountPath: /app/config/settings.yaml
+              subPath: settings.yaml
+            - name: config
+              mountPath: /app/config/widgets.yaml
+              subPath: widgets.yaml
+            - name: config
+              mountPath: /app/config/services.yaml
+              subPath: services.yaml
+            - name: config
+              mountPath: /app/config/bookmarks.yaml
+              subPath: bookmarks.yaml
+            - name: config
+              mountPath: /app/config/docker.yaml
+              subPath: docker.yaml
+            - name: config
+              mountPath: /app/config/custom.css
+              subPath: custom.css
+            - name: config
+              mountPath: /app/config/custom.js
+              subPath: custom.js
+            - name: logs
+              mountPath: /app/config/logs
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+      volumes:
+        - name: config
+          configMap:
+            name: homepage-config
+        - name: logs
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homepage
+  namespace: default
+spec:
+  selector:
+    app: homepage
+  ports:
+    - port: 3000
+      targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homepage
+  namespace: default
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: default-authentik@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: home.dthackray.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homepage
+                port:
+                  number: 3000
+  tls:
+    - hosts:
+        - home.dthackray.com
+      secretName: homepage-tls
