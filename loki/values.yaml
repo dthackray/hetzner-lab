@@ -12,9 +12,9 @@ loki:
     join_members:
       - loki-memberlist.svc.cluster.local
     # Since you only have 1 node, tell it not to wait for others
-      min_join_backoff: 1s
-      max_join_backoff: 2s
-      max_join_retries: 5
+    min_join_backoff: 1s
+    max_join_backoff: 2s
+    max_join_retries: 5
 
   # Common config
   commonConfig:
@@ -75,6 +75,12 @@ write:
 gateway:
   enabled: true
   replicas: 1
+
+  nginxConfig:
+    serverSnippet: |
+      proxy_read_timeout 600s;
+      proxy_send_timeout 600s;
+      keepalive_timeout 600s;
 
   resources:
     requests:
