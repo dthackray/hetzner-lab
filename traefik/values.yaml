@@ -101,8 +101,8 @@ additionalArguments:
   - "--experimental.plugins.geoblock.version=v0.3.4"
   - "--experimental.plugins.crowdsec.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin"
   - "--experimental.plugins.crowdsec.version=v1.4.6"
-  - "--experimental.plugins.botwrangler.modulename=github.com/holysoles/bot-wrangler-traefik-plugin"
-  - "--experimental.plugins.botwrangler.version=v0.2.2"
+  - "--experimental.plugins.wrangler.modulename=github.com/holysoles/bot-wrangler-traefik-plugin"
+  - "--experimental.plugins.wrangler.version=v0.10.1"
   # HTTP to HTTPS redirect
   - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
   - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
@@ -319,7 +319,8 @@ extraObjects:
       namespace: default
     spec:
       plugin:
-        botwrangler:
+        wrangler:
+          enabled: true
           # PROXY: Send AI bots to iocaine for poisoning
           botAction: PROXY
           botProxyUrl: http://iocaine.default.svc.cluster.local:42069
