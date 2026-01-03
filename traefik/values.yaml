@@ -296,7 +296,7 @@ extraObjects:
       plugin:
         crowdsec:
           enabled: true
-          logLevel: INFO
+          logLevel: DEBUG
           # Streaming mode: keeps only banned IPs in cache, syncs periodically
           crowdsecMode: stream
           crowdsecLapiScheme: http
@@ -305,6 +305,8 @@ extraObjects:
           crowdsecLapiKeyFile: /etc/traefik/crowdsec/api-key
           # Sync banned IPs every 60 seconds
           updateIntervalSeconds: 60
+          # Fail-open: -1 means never block traffic if LAPI is unreachable
+          updateMaxFailure: -1
           # Allow local IPs to bypass
           clientTrustedIPs:
             - 10.0.0.0/8
