@@ -300,7 +300,7 @@ extraObjects:
           # Streaming mode: keeps only banned IPs in cache, syncs periodically
           crowdsecMode: stream
           crowdsecLapiScheme: http
-          crowdsecLapiHost: crowdsec-lapi.crowdsec.svc.cluster.local:8080
+          crowdsecLapiHost: crowdsec-service.crowdsec.svc.cluster.local:8080
           # API key mounted from secret
           crowdsecLapiKeyFile: /etc/traefik/crowdsec/api-key
           # Sync banned IPs every 60 seconds
