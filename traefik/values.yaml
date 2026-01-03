@@ -87,6 +87,10 @@ additionalArguments:
   - "--experimental.plugins.fail2ban.version=v0.8.9"
   - "--experimental.plugins.geoblock.modulename=github.com/PascalMinder/geoblock"
   - "--experimental.plugins.geoblock.version=v0.3.4"
+  - "--experimental.plugins.crowdsec.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin"
+  - "--experimental.plugins.crowdsec.version=v1.3.5"
+  # Iocaine local plugin
+  - "--experimental.localPlugins.iocaine.moduleName=git.mstar.dev/mstar/traefik-iocaine-middleware"
 
 # Providers configuration
 providers:
