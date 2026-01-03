@@ -89,3 +89,16 @@ agent:
 # Disable AppSec for now (WAF functionality)
 appsec:
   enabled: false
+
+# Custom configuration for whitelisting
+config:
+  # PostOverflow whitelist for trusted IPs
+  postoverflows:
+    s01-whitelist:
+      my-whitelist.yaml: |
+        name: my-whitelist
+        description: "Whitelist for trusted IPs"
+        whitelist:
+          reason: "Trusted admin IPs"
+          ip:
+            - "91.98.1.95"  # Admin home IP
