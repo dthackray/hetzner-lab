@@ -22,6 +22,11 @@ spec:
   destination:
     server: {{ .Values.spec.destination.server }}
     namespace: alloy
+  ignoreDifferences:
+    - group: apps
+      kind: DaemonSet
+      jsonPointers:
+        - /status
   syncPolicy:
     automated:
       prune: true
@@ -29,4 +34,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - RespectIgnoreDifferences=true
 {{- end }}
