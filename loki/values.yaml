@@ -8,9 +8,21 @@ loki:
   # Authentication disabled - using Authentik at ingress level
   auth_enabled: false
 
+  memberlist:
+    join_members:
+      - loki-memberlist.svc.cluster.local
+    # Since you only have 1 node, tell it not to wait for others
+      min_join_backoff: 1s
+      max_join_backoff: 2s
+      max_join_retries: 5
+
   # Common config
   commonConfig:
     replication_factor: 1
+    ring:
+      instance_addr: 127.0.0.1
+      kvstore:
+        store: memberlist
 
   # Schema config
   schemaConfig:
