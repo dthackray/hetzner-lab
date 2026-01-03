@@ -31,9 +31,6 @@ ports:
     port: 8000
     exposedPort: 80
     protocol: TCP
-    # Redirect HTTP to HTTPS
-    redirectTo:
-      port: websecure
     # Apply geoblock before redirect to reject blocked countries early
     middlewares:
       - default-geoblock@kubernetescrd
@@ -106,6 +103,10 @@ additionalArguments:
   - "--experimental.plugins.crowdsec.version=v1.4.6"
   - "--experimental.plugins.botwrangler.modulename=github.com/holysoles/bot-wrangler-traefik-plugin"
   - "--experimental.plugins.botwrangler.version=v0.2.2"
+  # HTTP to HTTPS redirect
+  - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+  - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+  - "--entrypoints.web.http.redirections.entryPoint.permanent=true"
 
 # Providers configuration
 providers:
