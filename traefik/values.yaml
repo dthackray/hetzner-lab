@@ -10,6 +10,26 @@ deployment:
   additionalVolumes:
     - name: plugins-storage
       emptyDir: {}
+    - name: plugins-local
+      emptyDir: {}
+    - name: crowdsec-bouncer-key
+      secret:
+        secretName: crowdsec-bouncer-key
+        optional: true # Allow Traefik to start before secret exists
+  # InitContainer to clone iocaine plugin (not available on Traefik plugin registry)
+  initContainers:
+    - name: clone-iocaine-plugin
+      image: alpine/git:latest
+      command:
+        - sh
+        - -c
+        - |
+          mkdir -p /plugins-local/src/git.mstar.dev/mstar
+          git clone https://git.mstar.dev/mstar/traefik-iocaine-middleware.git \
+            /plugins-local/src/git.mstar.dev/mstar/traefik-iocaine-middleware
+      volumeMounts:
+        - name: plugins-local
+          mountPath: /plugins-local
 
 # Service configuration - Using LoadBalancer with Hetzner CCM
 service:
@@ -48,12 +68,12 @@ ports:
 # Dashboard configuration
 ingressRoute:
   dashboard:
-    enabled: false  # Disabled - using custom IngressRoute with Authentik in extraObjects
+    enabled: false # Disabled - using custom IngressRoute with Authentik in extraObjects
 
 # Enable dashboard via API
 api:
   dashboard: true
-  insecure: false  # Secured via Authentik ForwardAuth
+  insecure: false # Secured via Authentik ForwardAuth
 
 # Logs configuration
 logs:
@@ -138,6 +158,12 @@ additionalVolumeMounts:
   - name: plugins-storage
     mountPath: /plugins-storage
     readOnly: false
+  - name: plugins-local
+    mountPath: /plugins-local
+    readOnly: true
+  - name: crowdsec-bouncer-key
+    mountPath: /etc/traefik/crowdsec
+    readOnly: true
 
 # Extra Kubernetes objects to deploy with Traefik
 extraObjects:
@@ -200,3 +226,108 @@ extraObjects:
         kind: ClusterIssuer
       dnsNames:
         - traefik.dthackray.com
+
+  # GeoBlock Middleware - Allow UK and allied countries only
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: geoblock
+      namespace: default
+    spec:
+      plugin:
+        geoblock:
+          allowLocalRequests: true
+          allowUnknownCountries: false
+          api: "https://get.geojs.io/v1/ip/country/{ip}"
+          apiTimeoutMs: 500
+          # Cache size for IP lookups
+          cacheSize: 100
+          # Log API requests for debugging
+          logApiRequests: true
+          # Allowed countries (UK + allies)
+          countries:
+            - GB
+            - IE
+            - AT # Austria
+            - BE # Belgium
+            - BG # Bulgaria
+            - HR # Croatia
+            - CY # Cyprus
+            - CZ # Czechia
+            - DK # Denmark
+            - EE # Estonia
+            - FI # Finland
+            - FR # France
+            - DE # Germany
+            - GR # Greece
+            - HU # Hungary
+            - IT # Italy
+            - LV # Latvia
+            - LT # Lithuania
+            - LU # Luxembourg
+            - MT # Malta
+            - NL # Netherlands
+            - PL # Poland
+            - PT # Portugal
+            - RO # Romania
+            - SK # Slovakia
+            - SI # Slovenia
+            - ES # Spain
+            - SE # Sweden
+            - US # United States
+            - CA # Canada
+            - AU # Australia
+            - NZ # New Zealand
+
+  # CrowdSec Bouncer Middleware
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: crowdsec
+      namespace: default
+    spec:
+      plugin:
+        crowdsec:
+          enabled: true
+          logLevel: INFO
+          crowdsecMode: live
+          crowdsecLapiScheme: http
+          crowdsecLapiHost: crowdsec-lapi.crowdsec.svc.cluster.local:8080
+          # API key mounted from secret
+          crowdsecLapiKeyFile: /etc/traefik/crowdsec/api-key
+          updateIntervalSeconds: 60
+          # Allow local IPs to bypass
+          clientTrustedIPs:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+
+  # Iocaine AI Bot Poisoner Middleware
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: iocaine
+      namespace: default
+    spec:
+      plugin:
+        iocaine:
+          iocaineHttpUrl: http://iocaine.default.svc.cluster.local:42069
+          methods:
+            - GET
+            - HEAD
+
+  # Security Chain - Combines all security middlewares
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: security-chain
+      namespace: default
+    spec:
+      chain:
+        middlewares:
+          - name: geoblock
+            namespace: default
+          - name: crowdsec
+            namespace: default
+          - name: iocaine
+            namespace: default

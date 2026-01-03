@@ -1,0 +1,64 @@
+---
+# Iocaine - AI Bot Poisoner
+# https://iocaine.madhouse-project.org/
+# Serves garbage content to AI crawlers to poison their training data
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iocaine
+  namespace: default
+  labels:
+    app: iocaine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iocaine
+  template:
+    metadata:
+      labels:
+        app: iocaine
+    spec:
+      containers:
+        - name: iocaine
+          image: git.madhouse-project.org/iocaine/iocaine:latest
+          ports:
+            - containerPort: 42069
+              name: http
+          env:
+            - name: RUST_LOG
+              value: "iocaine=info"
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 42069
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 42069
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iocaine
+  namespace: default
+  labels:
+    app: iocaine
+spec:
+  selector:
+    app: iocaine
+  ports:
+    - port: 42069
+      targetPort: 42069
+      name: http

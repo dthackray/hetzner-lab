@@ -1,0 +1,91 @@
+# CrowdSec Configuration
+# Helm chart: https://github.com/crowdsecurity/helm-charts
+
+# Container runtime (k3s uses containerd)
+container_runtime: containerd
+
+# LAPI (Local API) Configuration
+lapi:
+  replicas: 1
+
+  # Environment variables
+  env:
+    # Register with CrowdSec Central API for community blocklists
+    - name: ENROLL_KEY
+      value: ""  # Optional: Add your CrowdSec console key for central management
+    - name: ENROLL_INSTANCE_NAME
+      value: "hetzner-cluster"
+    - name: ENROLL_TAGS
+      value: "k8s homelab"
+
+  # Persistence for database and config
+  persistentVolume:
+    data:
+      enabled: true
+      size: 1Gi
+      storageClassName: ""  # Use default storage class
+    config:
+      enabled: true
+      size: 100Mi
+      storageClassName: ""
+
+  # Resources
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 500m
+
+  # Dashboard access (optional)
+  dashboard:
+    enabled: false
+
+  # Metrics for Prometheus
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+# Agent Configuration (DaemonSet to collect logs)
+agent:
+  # Run as DaemonSet on all nodes
+  enabled: true
+
+  # Acquisition configuration - what logs to parse
+  acquisition:
+    # Parse Traefik access logs
+    - namespace: kube-system
+      podName: traefik-*
+      program: traefik
+    # Parse Kubernetes audit logs if available
+    - namespace: kube-system
+      podName: kube-apiserver-*
+      program: k8s-audit
+
+  # Environment variables
+  env:
+    - name: PARSERS
+      value: "crowdsecurity/traefik-logs crowdsecurity/http-logs"
+    - name: COLLECTIONS
+      value: "crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/base-http-scenarios"
+
+  # Resources
+  resources:
+    requests:
+      memory: 64Mi
+      cpu: 50m
+    limits:
+      memory: 128Mi
+      cpu: 200m
+
+  # Tolerations to run on all nodes
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+# Disable AppSec for now (WAF functionality)
+appsec:
+  enabled: false

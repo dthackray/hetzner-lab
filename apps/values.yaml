@@ -39,3 +39,10 @@ kubePrometheusStack:
 
 homepage:
   enabled: true
+
+crowdsec:
+  enabled: true
+  chartVersion: "0.20.0"
+
+iocaine:
+  enabled: true
