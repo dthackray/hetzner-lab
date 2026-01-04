@@ -25,9 +25,10 @@ spec:
   ignoreDifferences:
     - group: apps
       kind: StatefulSet
-      jsonPointers:
-        - /status
-        - /spec/volumeClaimTemplates/0/metadata/creationTimestamp
+      jqPathExpressions:
+        - .status
+        - .spec.volumeClaimTemplates[]?.metadata
+        - .spec.volumeClaimTemplates[]?.status
     - group: apps
       kind: DaemonSet
       jsonPointers:
@@ -36,11 +37,6 @@ spec:
       kind: Deployment
       jsonPointers:
         - /status
-    - group: ""
-      kind: PersistentVolumeClaim
-      jsonPointers:
-        - /metadata/creationTimestamp
-        - /metadata/resourceVersion
   syncPolicy:
     automated:
       prune: true
