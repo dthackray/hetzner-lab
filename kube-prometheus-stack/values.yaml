@@ -71,6 +71,8 @@ grafana:
     auth:
       disable_login_form: true
       disable_signout_menu: true
+    auth.basic:
+      enabled: true  # Allow basic auth for API access (needed for sidecar reload)
     auth.proxy:
       enabled: true
       header_name: X-authentik-username
@@ -133,6 +135,14 @@ grafana:
     limits:
       cpu: 500m
       memory: 512Mi
+
+  # Sidecar configuration for datasources
+  # Use init container to ensure datasources are available before Grafana starts
+  sidecar:
+    datasources:
+      enabled: true
+      initDatasources: true
+      skipReload: false
 
 # Alertmanager configuration
 alertmanager:
