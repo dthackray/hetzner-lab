@@ -27,8 +27,7 @@ spec:
       kind: StatefulSet
       jqPathExpressions:
         - .status
-        - .spec.volumeClaimTemplates[]?.metadata
-        - .spec.volumeClaimTemplates[]?.status
+        - .spec.volumeClaimTemplates
   syncPolicy:
     automated:
       prune: true

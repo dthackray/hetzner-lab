@@ -27,8 +27,7 @@ spec:
       kind: StatefulSet
       jqPathExpressions:
         - .status
-        - .spec.volumeClaimTemplates[]?.metadata
-        - .spec.volumeClaimTemplates[]?.status
+        - .spec.volumeClaimTemplates
     - group: apps
       kind: DaemonSet
       jsonPointers:
