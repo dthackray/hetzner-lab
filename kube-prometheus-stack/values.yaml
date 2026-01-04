@@ -141,6 +141,9 @@ grafana:
     datasources:
       enabled: true
       skipReload: false
+      # Override sidecar env var to trigger reload after initial write
+      env:
+        REQ_SKIP_INIT: "false"
 
 # Alertmanager configuration
 alertmanager:
