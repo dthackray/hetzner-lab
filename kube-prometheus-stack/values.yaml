@@ -137,11 +137,9 @@ grafana:
       memory: 512Mi
 
   # Sidecar configuration for datasources
-  # Use init container to ensure datasources are available before Grafana starts
   sidecar:
     datasources:
       enabled: true
-      initDatasources: true
       skipReload: false
 
 # Alertmanager configuration
