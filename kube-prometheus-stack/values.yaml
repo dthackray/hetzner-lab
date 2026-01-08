@@ -144,14 +144,18 @@ grafana:
 
   # Sidecar configuration for datasources
   # See: https://github.com/grafana/helm-charts/issues/4023
+  # See: https://github.com/kiwigrid/k8s-sidecar
   sidecar:
     datasources:
       enabled: true
-      # Disable init container - it uses METHOD:WATCH which never exits
-      # The sidecar container will handle datasource loading instead
+      # Disable init container entirely - use only the sidecar container
+      # The sidecar will load datasources and watch for changes
       initDatasources: false
-      # Use LIST method for initial sync (exits after loading)
-      watchMethod: WATCH
+      # Use LIST method so init container exits after loading (if it exists)
+      # This is the METHOD env var passed to k8s-sidecar
+      watchMethod: LIST
+      # Skip reload API call (avoids auth issues and race conditions)
+      skipReload: true
       # Search all namespaces for datasource ConfigMaps
       searchNamespace: ALL
 
