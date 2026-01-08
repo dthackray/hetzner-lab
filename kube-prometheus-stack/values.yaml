@@ -95,43 +95,48 @@ grafana:
     size: 10Gi
 
   # Additional datasources - Loki and Tempo for LGTM stack
-  additionalDataSources:
-    - name: Loki
-      type: loki
-      uid: loki
-      url: http://loki-gateway.loki.svc.cluster.local
-      access: proxy
-      jsonData:
-        maxLines: 1000
-        derivedFields:
-          - name: TraceID
-            datasourceUid: tempo
-            matcherRegex: "traceID=(\\w+)"
-            url: "$${__value.raw}"
+  # Using 'datasources' instead of 'additionalDataSources' to mount directly
+  # without requiring the sidecar (which has port 8080 conflict issues)
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Loki
+          type: loki
+          uid: loki
+          url: http://loki-gateway.loki.svc.cluster.local
+          access: proxy
+          jsonData:
+            maxLines: 1000
+            derivedFields:
+              - name: TraceID
+                datasourceUid: tempo
+                matcherRegex: "traceID=(\\w+)"
+                url: "$${__value.raw}"
 
-    - name: Tempo
-      type: tempo
-      uid: tempo
-      url: http://tempo.tempo.svc.cluster.local:3100
-      access: proxy
-      jsonData:
-        httpMethod: GET
-        tracesToLogsV2:
-          datasourceUid: loki
-          spanStartTimeShift: "-1h"
-          spanEndTimeShift: "1h"
-          filterByTraceID: true
-          filterBySpanID: false
-        tracesToMetrics:
-          datasourceUid: prometheus
-          spanStartTimeShift: "-1h"
-          spanEndTimeShift: "1h"
-        serviceMap:
-          datasourceUid: prometheus
-        nodeGraph:
-          enabled: true
-        lokiSearch:
-          datasourceUid: loki
+        - name: Tempo
+          type: tempo
+          uid: tempo
+          url: http://tempo.tempo.svc.cluster.local:3100
+          access: proxy
+          jsonData:
+            httpMethod: GET
+            tracesToLogsV2:
+              datasourceUid: loki
+              spanStartTimeShift: "-1h"
+              spanEndTimeShift: "1h"
+              filterByTraceID: true
+              filterBySpanID: false
+            tracesToMetrics:
+              datasourceUid: prometheus
+              spanStartTimeShift: "-1h"
+              spanEndTimeShift: "1h"
+            serviceMap:
+              datasourceUid: prometheus
+            nodeGraph:
+              enabled: true
+            lokiSearch:
+              datasourceUid: loki
 
   # Resource limits
   resources:
