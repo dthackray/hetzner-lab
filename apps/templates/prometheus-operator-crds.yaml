@@ -1,0 +1,34 @@
+{{- if .Values.kubePrometheusStack.enabled }}
+---
+# Prometheus Operator CRDs - managed separately due to annotation size limits
+# See: https://github.com/prometheus-community/helm-charts/issues/1500
+# See: https://www.arthurkoziel.com/fixing-argocd-crd-too-long-error/
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-operator-crds
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # Ensure CRDs are synced before the main kube-prometheus-stack
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/prometheus-operator/prometheus-operator.git
+    path: example/prometheus-operator-crd
+    targetRevision: v0.87.1
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      # ServerSideApply is required for large CRDs to avoid annotation size limit
+      - ServerSideApply=true
+      # Replace strategy for CRDs since they can't be patched easily
+      - CreateNamespace=false
+{{- end }}

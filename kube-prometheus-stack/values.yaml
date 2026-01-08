@@ -1,6 +1,12 @@
 # kube-prometheus-stack Configuration for hetzner-lab cluster
 # Complete observability stack: Prometheus, Grafana, Alertmanager
 
+# Disable CRDs in helm chart - they are too large for kubectl apply annotations
+# CRDs will be managed separately via ServerSideApply in ArgoCD
+# See: https://github.com/prometheus-community/helm-charts/issues/1500
+crds:
+  enabled: false
+
 # Prometheus configuration
 prometheus:
   # Ingress for Prometheus UI
@@ -137,9 +143,17 @@ grafana:
       memory: 512Mi
 
   # Sidecar configuration for datasources
+  # See: https://github.com/grafana/helm-charts/issues/4023
   sidecar:
     datasources:
       enabled: true
+      # Disable init container - it uses METHOD:WATCH which never exits
+      # The sidecar container will handle datasource loading instead
+      initDatasources: false
+      # Use LIST method for initial sync (exits after loading)
+      watchMethod: WATCH
+      # Search all namespaces for datasource ConfigMaps
+      searchNamespace: ALL
 
 # Alertmanager configuration
 alertmanager:
