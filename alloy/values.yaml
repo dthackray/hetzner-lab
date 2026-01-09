@@ -86,9 +86,11 @@ alloy:
           drop_malformed = true
         }
 
-        // Keep only the level label from extracted values
+        // Keep important labels (drop any other extracted labels from JSON parsing)
+        // Note: This only affects labels extracted by stage.json, not discovery labels
+        // Discovery labels (namespace, pod, container, node, app, cluster) are preserved
         stage.label_keep {
-          values = ["level"]
+          values = ["level", "namespace", "pod", "container", "node", "app", "cluster"]
         }
 
         forward_to = [loki.write.default.receiver]
