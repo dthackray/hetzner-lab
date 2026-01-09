@@ -24,6 +24,10 @@ prometheus:
           - prometheus.dthackray.com
 
   prometheusSpec:
+    # External labels added to all metrics - ensures consistent cluster name
+    externalLabels:
+      cluster: hetzner-cluster-1
+
     # Retention period for metrics
     retention: 30d
 
