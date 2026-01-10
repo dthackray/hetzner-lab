@@ -23,7 +23,9 @@ spec:
     namespace: kafka
   syncPolicy:
     automated:
-      prune: true
+      # Disable prune - Strimzi operator creates many resources (PVCs, pods, secrets)
+      # that ArgoCD doesn't know about and would otherwise delete
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
