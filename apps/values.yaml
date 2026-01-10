@@ -63,3 +63,7 @@ alloy:
 opentelemetryOperator:
   enabled: true
   chartVersion: "0.102.0"
+
+# Node configuration (sysctl tuning for inotify limits)
+nodeConfig:
+  enabled: true

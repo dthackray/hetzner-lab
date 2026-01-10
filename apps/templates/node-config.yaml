@@ -1,0 +1,26 @@
+{{- if .Values.nodeConfig.enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: node-config
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # Deploy early to fix node limits before other apps
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dthackray/hetzner-lab.git
+    targetRevision: main
+    path: node-config
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+{{- end }}
