@@ -10,6 +10,8 @@ metadata:
   annotations:
     # Deploy before Kafka cluster
     argocd.argoproj.io/sync-wave: "-1"
+    # Use server-side diff to avoid CRD schema comparison errors
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
 spec:
   project: default
   sources:

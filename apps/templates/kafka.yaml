@@ -10,6 +10,8 @@ metadata:
   annotations:
     # Deploy after Strimzi operator
     argocd.argoproj.io/sync-wave: "0"
+    # Use server-side diff to avoid CRD schema comparison errors
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
 spec:
   project: default
   source:
