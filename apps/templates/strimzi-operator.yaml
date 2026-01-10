@@ -1,0 +1,35 @@
+{{- if .Values.strimzi.enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: strimzi-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # Deploy before Kafka cluster
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://strimzi.io/charts/
+      chart: strimzi-kafka-operator
+      targetRevision: {{ .Values.strimzi.chartVersion }}
+      helm:
+        valueFiles:
+          - $values/strimzi-operator/values.yaml
+    - repoURL: https://github.com/dthackray/hetzner-lab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: strimzi
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}

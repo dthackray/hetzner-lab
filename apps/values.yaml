@@ -67,3 +67,15 @@ opentelemetryOperator:
 # Node configuration (sysctl tuning for inotify limits)
 nodeConfig:
   enabled: true
+
+# Kafka (Strimzi Operator + Kafka Cluster + Kafka UI)
+strimzi:
+  enabled: true
+  chartVersion: "0.49.1"
+
+kafka:
+  enabled: true
+
+kafkaUi:
+  enabled: true
+  chartVersion: "1.4.2"

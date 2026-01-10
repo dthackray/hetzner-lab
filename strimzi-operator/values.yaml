@@ -1,0 +1,18 @@
+# Strimzi Kafka Operator Configuration
+# https://github.com/strimzi/strimzi-kafka-operator/tree/main/helm-charts/helm3/strimzi-kafka-operator
+
+# Watch all namespaces for Kafka resources
+watchAnyNamespace: true
+
+# Resource limits for the operator
+resources:
+  requests:
+    cpu: 200m
+    memory: 384Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Enable leader election for HA (not needed for single replica)
+leaderElection:
+  enabled: false
