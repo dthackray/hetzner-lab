@@ -1,0 +1,47 @@
+# Deployment for Wikimedia EventStreams to Kafka producer
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wikimedia-producer
+  labels:
+    app: wikimedia-producer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wikimedia-producer
+  template:
+    metadata:
+      labels:
+        app: wikimedia-producer
+    spec:
+      containers:
+        - name: producer
+          image: python:3.11-slim
+          command:
+            - /bin/sh
+            - -c
+            - |
+              pip install --no-cache-dir kafka-python requests && \
+              python /app/producer.py
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+            - name: KAFKA_TOPIC
+              value: "wikimedia.recentchange"
+            - name: WIKIMEDIA_STREAM_URL
+              value: "https://stream.wikimedia.org/v2/stream/recentchange"
+          volumeMounts:
+            - name: script
+              mountPath: /app
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+      volumes:
+        - name: script
+          configMap:
+            name: wikimedia-producer-script

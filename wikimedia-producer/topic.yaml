@@ -1,0 +1,15 @@
+# KafkaTopic for Wikimedia recent changes
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: wikimedia.recentchange
+  labels:
+    strimzi.io/cluster: kafka-cluster
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    # Retain messages for 7 days
+    retention.ms: 604800000
+    # Compact after 1 hour
+    segment.ms: 3600000

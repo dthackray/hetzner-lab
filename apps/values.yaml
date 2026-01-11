@@ -79,3 +79,7 @@ kafka:
 kafkaUi:
   enabled: true
   chartVersion: "0.7.6"
+
+# Wikimedia EventStreams to Kafka producer
+wikimediaProducer:
+  enabled: true

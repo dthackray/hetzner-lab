@@ -1,0 +1,141 @@
+# Python script to consume Wikimedia SSE and produce to Kafka
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wikimedia-producer-script
+data:
+  producer.py: |
+    #!/usr/bin/env python3
+    """
+    Wikimedia EventStreams to Kafka Producer
+
+    Consumes real-time Wikipedia edit events from Wikimedia's SSE stream
+    and produces them to a Kafka topic.
+
+    Stream documentation: https://stream.wikimedia.org/?doc
+    """
+
+    import json
+    import os
+    import signal
+    import sys
+    import time
+    from datetime import datetime
+
+    import requests
+    from kafka import KafkaProducer
+    from kafka.errors import KafkaError
+
+    # Configuration from environment
+    KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092')
+    KAFKA_TOPIC = os.getenv('KAFKA_TOPIC', 'wikimedia.recentchange')
+    WIKIMEDIA_STREAM_URL = os.getenv('WIKIMEDIA_STREAM_URL', 'https://stream.wikimedia.org/v2/stream/recentchange')
+
+    # Graceful shutdown
+    running = True
+
+    def signal_handler(signum, frame):
+        global running
+        print(f"\n[{datetime.now()}] Received signal {signum}, shutting down...")
+        running = False
+
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+
+    def create_producer():
+        """Create Kafka producer with retry logic."""
+        max_retries = 10
+        retry_delay = 5
+
+        for attempt in range(max_retries):
+            try:
+                producer = KafkaProducer(
+                    bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS.split(','),
+                    value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                    key_serializer=lambda k: k.encode('utf-8') if k else None,
+                    acks='all',
+                    retries=3,
+                    max_in_flight_requests_per_connection=1,
+                )
+                print(f"[{datetime.now()}] Connected to Kafka at {KAFKA_BOOTSTRAP_SERVERS}")
+                return producer
+            except KafkaError as e:
+                print(f"[{datetime.now()}] Failed to connect to Kafka (attempt {attempt + 1}/{max_retries}): {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+                else:
+                    raise
+
+    def consume_and_produce():
+        """Main loop: consume SSE events and produce to Kafka."""
+        producer = create_producer()
+        event_count = 0
+        last_log_time = time.time()
+
+        print(f"[{datetime.now()}] Starting to consume from {WIKIMEDIA_STREAM_URL}")
+        print(f"[{datetime.now()}] Producing to topic: {KAFKA_TOPIC}")
+
+        while running:
+            try:
+                # Connect to SSE stream with timeout
+                response = requests.get(
+                    WIKIMEDIA_STREAM_URL,
+                    stream=True,
+                    headers={'Accept': 'text/event-stream'},
+                    timeout=(10, 60)  # connect timeout, read timeout
+                )
+                response.raise_for_status()
+
+                # Process SSE events
+                event_data = []
+                for line in response.iter_lines():
+                    if not running:
+                        break
+
+                    if line:
+                        line = line.decode('utf-8')
+
+                        if line.startswith('data:'):
+                            data = line[5:].strip()
+                            if data:
+                                try:
+                                    event = json.loads(data)
+
+                                    # Use wiki + page title as key for partitioning
+                                    key = f"{event.get('wiki', 'unknown')}:{event.get('title', 'unknown')}"
+
+                                    # Send to Kafka
+                                    producer.send(KAFKA_TOPIC, key=key, value=event)
+                                    event_count += 1
+
+                                    # Log progress every 30 seconds
+                                    if time.time() - last_log_time > 30:
+                                        producer.flush()
+                                        print(f"[{datetime.now()}] Produced {event_count} events to {KAFKA_TOPIC}")
+                                        last_log_time = time.time()
+
+                                except json.JSONDecodeError as e:
+                                    print(f"[{datetime.now()}] Failed to parse JSON: {e}")
+                                except KafkaError as e:
+                                    print(f"[{datetime.now()}] Kafka error: {e}")
+
+            except requests.exceptions.RequestException as e:
+                print(f"[{datetime.now()}] Connection error: {e}")
+                if running:
+                    print(f"[{datetime.now()}] Reconnecting in 5 seconds...")
+                    time.sleep(5)
+            except Exception as e:
+                print(f"[{datetime.now()}] Unexpected error: {e}")
+                if running:
+                    time.sleep(5)
+
+        # Cleanup
+        print(f"[{datetime.now()}] Flushing remaining messages...")
+        producer.flush()
+        producer.close()
+        print(f"[{datetime.now()}] Total events produced: {event_count}")
+
+    if __name__ == '__main__':
+        print(f"[{datetime.now()}] Wikimedia EventStreams Kafka Producer starting...")
+        consume_and_produce()
+        print(f"[{datetime.now()}] Shutdown complete.")
