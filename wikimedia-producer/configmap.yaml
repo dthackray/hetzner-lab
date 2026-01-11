@@ -78,10 +78,14 @@ data:
         while running:
             try:
                 # Connect to SSE stream with timeout
+                # Wikimedia requires a proper User-Agent header
                 response = requests.get(
                     WIKIMEDIA_STREAM_URL,
                     stream=True,
-                    headers={'Accept': 'text/event-stream'},
+                    headers={
+                        'Accept': 'text/event-stream',
+                        'User-Agent': 'hetzner-lab-kafka-producer/1.0 (https://github.com/dthackray/hetzner-lab; Kafka learning project)'
+                    },
                     timeout=(10, 60)  # connect timeout, read timeout
                 )
                 response.raise_for_status()
