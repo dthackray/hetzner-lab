@@ -18,7 +18,7 @@ spec:
     targetRevision: main
     path: opentelemetry-operator
     directory:
-      include: "instrumentation.yaml"
+      include: "{instrumentation.yaml,issuer.yaml}"
   destination:
     server: {{ .Values.spec.destination.server }}
     namespace: opentelemetry-operator

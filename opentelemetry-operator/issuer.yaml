@@ -1,0 +1,8 @@
+# Self-signed issuer for OpenTelemetry Operator webhook certificates
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: opentelemetry-operator-selfsigned
+  namespace: opentelemetry-operator
+spec:
+  selfSigned: {}

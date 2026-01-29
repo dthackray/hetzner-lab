@@ -9,7 +9,9 @@ spec:
   partitions: 3
   replicas: 3
   config:
-    # Retain messages for 7 days
-    retention.ms: 604800000
+    # Retain messages for 1 day
+    retention.ms: 86400000
+    # Max 5GB per partition to prevent disk exhaustion
+    retention.bytes: 5368709120
     # Compact after 1 hour
     segment.ms: 3600000

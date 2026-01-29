@@ -22,9 +22,13 @@ manager:
       release: kube-prometheus-stack
 
 # Admission webhooks configuration
-# Use auto-generated self-signed certs for internal webhook (not Let's Encrypt)
+# Use cert-manager with self-signed CA for internal webhook certificates
 admissionWebhooks:
   certManager:
-    enabled: false
-  autoGenerateCert:
     enabled: true
+    # Use self-signed issuer for internal webhooks (created below)
+    issuerRef:
+      kind: Issuer
+      name: opentelemetry-operator-selfsigned
+  autoGenerateCert:
+    enabled: false
